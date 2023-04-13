@@ -4,6 +4,14 @@ import numpy as np
 import pandas as pd 
 import matplotlib.pyplot as plt 
 import os
+import sys
+
+RED   = "\033[1;31m"  
+GREEN = "\033[0;32m"
+BOLD    = "\033[;1m"
+
+
+
 
 class MyLinearRegression():
     """
@@ -203,15 +211,10 @@ class MyLinearRegression():
 def plot(x, y, theta, loss) :
 
     plt.scatter(x, y, color = "blue", label = "Data") 
-    # set legend 
-   # plt.legend(["Data", "Linear regression"]) 
-    # set x axis label 
+ 
     plt.xlabel("km") 
-    # set y axis label 
     plt.ylabel("price") 
-    # set title 
     plt.title("Linear regression") 
-    # Add loss to the title 
     plt.title("Linear regression (loss = " + str(loss.round(2)) + "%)")
 
     plt.plot(x, theta[0] + theta[1] * x, color = "red", label = "Linear regression") 
@@ -221,14 +224,17 @@ def plot(x, y, theta, loss) :
 
 if __name__ == "__main__" : 
 
-    # Check is the file exists, if not exit the program 
+
+
+
+    sys.stdout.write(RED)
     if not os.path.isfile("data.csv") : 
         print("File data.csv does not exist") 
         exit()
-    # Check if file is as valid csv file, if not exit the program 
     try :
         data = pd.read_csv("data.csv") 
-    except :
+    except IOError as e:
+
         print("File data.csv is not a valid csv file") 
         exit()
     X = np.array(data.loc[:,"km"]).reshape(-1,1)
@@ -244,20 +250,16 @@ if __name__ == "__main__" :
     myLr.thetas[0] -= myLr.thetas[1] * np.mean(X) / np.std(X)
     myLr.thetas[1] /= np.std(X)
 
-    # Calculate the loss of the model and print it in percentage 
     loss = myLr.mse_(Y, myLr.predict_(X)) / 100000
-    # print the loss with two decimals 
-
+    sys.stdout.write(GREEN)
     print("Loss of the model : {}%".format(loss.round(2))) 
 
-    # Calcuate the loss of the model 
 
 
    #print(myLr.thetas[0].round(2))
    # print(myLr.thetas[1].round(2))
   
    
-   # print(myLr.thetas)
     plot(X, Y, myLr.thetas, loss) 
     np.savetxt("thetas.csv", myLr.thetas, delimiter = ",") 
 
