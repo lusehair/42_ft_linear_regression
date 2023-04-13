@@ -32,7 +32,7 @@ class MyLinearRegression():
         b = np.ones(len(x))
         return np.c_[b,x]
     
-    def simple_gradient(self, x, y, theta):
+    def simple_gradient(self, x, y):
         """Computes a gradient vector from three non-empty numpy.array, without any for loop.
         The three arrays must have compatible shapes.
         Args:
@@ -63,10 +63,13 @@ class MyLinearRegression():
         # gradient1 = (1/m) * np.sum((theta[0]+ (theta[1] * x) - y) * x)
         # theta[0] = gradient0
         # theta[1] = gradient1 
-        tmp_theta = np.array([0, 0])
+        tmp_theta = np.array([0.0, 0.0]).reshape(2, 1)
+        theta = self.thetas 
+
         for j in range(m):
             tmp_theta[0] += (theta[0] + theta[1] * x[j]) - y[j]
             tmp_theta[1] += ((theta[0] + theta[1] * x[j]) - y[j]) * x[j]
+        self.thetas = theta
         return tmp_theta 
             
    
@@ -135,10 +138,8 @@ class MyLinearRegression():
        
         for i in range(max_iter) :
           #  theta = self.thetas
-            thetatmp = np.array([0., 0.])
-            n = self.simple_gradient(x, y, thetatmp)
-            thetatmp -= (alpha * n) / len(y)
-        self.thetas = thetatmp
+            n = self.simple_gradient(x, y)
+            self.thetas -= (alpha * n) / len(y)
         return self.thetas
 
     def loss_elem_(self,y, y_hat):
@@ -190,7 +191,6 @@ class MyLinearRegression():
             return None 
         if y.shape != y_hat.shape :
             return None
-
         loss_array = self.loss_elem_(y, y_hat) 
         total = np.sum(loss_array) 
         loss = total / (2 * y.shape[0])
@@ -224,35 +224,48 @@ def minmax(x):
 def plot(x, y, theta) :
 
     plt.scatter(x, y, color = "blue") 
-    plt.plot(x, theta[1] + theta[0] * x, color = "red") 
+    plt.plot(x, theta[0] + theta[1] * x, color = "red") 
     plt.savefig("plot.png")
     plt.show() 
 
 if __name__ == "__main__" : 
 
-    data = pd.read_csv("data.csv") 
-    X = np.array(data.loc[:,"km"]).reshape(-1,1)
-    Y = np.array(data.loc[:,"price"]).reshape(-1,1)  
+    # data = pd.read_csv("data.csv") 
+    data = np.loadtxt("data.csv", dtype = np.longdouble, delimiter = ',', skiprows = 1)
 
-    X0 = np.array(data.loc[:,"km"]) 
-    Y0 = np.array(data.loc[:,"price"]) 
+    # X = np.array(data.loc[:,"km"]).reshape(-1,1)
+    # Y = np.array(data.loc[:,"price"]).reshape(-1,1)  
 
-    X = minmax(X) 
-    Y = minmax(Y) 
+    # X0 = np.array(data.loc[:,"km"]) 
+    # Y0 = np.array(data.loc[:,"price"]) 
+    # X0 = X
+    # Y0 = Y
 
-    myLr = MyLinearRegression(np.array([[0.], [0.]]), 1e-4, 1e5) 
+   # X = minmax(X) 
+    # Y = minmax(Y) 
+    X0 = data[:, 0]
+    Y0 = data[:, 1]
+    Y = Y0
+    X = (data[:, 0] - np.mean(data[:, 0])) / np.std(data[:, 0])
+    # Y = (data[:, 1] - np.mean(data[:, 1])) / np.std(data[:, 1])
+
+    myLr = MyLinearRegression(np.array([[0.], [0.]]), 0.3, 1500) 
     # myLr.predict_(X)
     myLr.fit_(X, Y) 
 
+    myLr.thetas[0] -= myLr.thetas[1] * np.mean(X0) / np.std(X0)
+    myLr.thetas[1] /= np.std(X0)
 
-    y_hat = myLr.predict_(X) 
-    print(y_hat)
-    print(myLr.thetas)
-    plot(X, Y, myLr.thetas)
+    print(myLr.thetas[0].round(2))
+    print(myLr.thetas[1].round(2))
+    # myLr.thetas = (myLr.thetas * (max(X) - min(X))) + min(X)  
+    # myLr.thetas[1] = (myLr.thetas[1] * (max(Y0) - min(Y0))) + min(Y0) 
 
 
-
-
+    #y_hat = myLr.predict_(X) 
+    #print(y_hat)
+    # print(myLr.thetas)
+    plot(X0, Y0, myLr.thetas) 
 
 
 
