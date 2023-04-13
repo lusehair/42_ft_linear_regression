@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd 
 import matplotlib.pyplot as plt 
+import os
 
 class MyLinearRegression():
     """
@@ -47,22 +48,18 @@ class MyLinearRegression():
         This function should not raise any Exception.
         """
 
-        # if not isinstance(x, np.ndarray) or x.size == 0 : 
-        #     return None 
-        # if not isinstance(y, np.ndarray) or y.size == 0 : 
-        #     return None 
-        # if not isinstance(theta, np.ndarray) or theta.size == 0 : 
-        #     return None 
-        # if x.shape != y.shape or theta.shape != (2, 1) : 
-        #     return None 
-        # if x.shape != (x.shape[0], 1) or y.shape != (y.shape[0], 1) : 
-        #     return None 
+        if not isinstance(x, np.ndarray) or x.size == 0 : 
+            return None 
+        if not isinstance(y, np.ndarray) or y.size == 0 : 
+            return None 
+        if not isinstance(self.thetas, np.ndarray) or self.thetas.size == 0 : 
+            return None 
+        if x.shape != y.shape or self.thetas.shape != (2, 1) : 
+            return None 
+        if x.shape != (x.shape[0], 1) or y.shape != (y.shape[0], 1) : 
+            return None 
 
         m = np.size(x)
-        # gradient0 = (1/m) * np.sum(theta[0] + (theta[1] * x) - y)
-        # gradient1 = (1/m) * np.sum((theta[0]+ (theta[1] * x) - y) * x)
-        # theta[0] = gradient0
-        # theta[1] = gradient1 
         tmp_theta = np.array([0.0, 0.0]).reshape(2, 1)
         theta = self.thetas 
 
@@ -73,9 +70,6 @@ class MyLinearRegression():
         return tmp_theta 
             
    
-
-
-
     def predict_(self, x):
         """Computes the vector of prediction y_hat from two non-empty numpy.array.
         Args:
@@ -129,15 +123,14 @@ class MyLinearRegression():
        
         max_iter = int(self.max_iter)
         alpha = self.alpha 
-        # if len(x.shape) != 2 :
-        #     x = x.reshape(-1, 1) 
-        # if len(y.shape) != 2 :
-        #     y = y.reshape(-1, 1) 
-        # if len(theta.shape) != 2 :
-        #     theta = theta.reshape(-1, 1)
+        if len(x.shape) != 2 :
+            x = x.reshape(-1, 1) 
+        if len(y.shape) != 2 :
+            y = y.reshape(-1, 1) 
+        if len(self.thetas.shape) != 2 :
+            theta = theta.reshape(-1, 1)
        
         for i in range(max_iter) :
-          #  theta = self.thetas
             n = self.simple_gradient(x, y)
             self.thetas -= (alpha * n) / len(y)
         return self.thetas
@@ -196,76 +189,79 @@ class MyLinearRegression():
         loss = total / (2 * y.shape[0])
         return loss 
 
-def minmax(x):
-    """Computes the normalized version of a non-empty numpy.ndarray using the min-max standardization.
-    Args:
-    x: has to be an numpy.ndarray, a vector.
-    Returns:
-    x’ as a numpy.ndarray.
-    None if x is a non-empty numpy.ndarray or not a numpy.ndarray.
-    Raises:
-    This function shouldn’t raise any Exception.
-    """ 
 
-    if not isinstance(x, np.ndarray) or x.size == 0 : 
-        return None 
-    if x.shape != (x.shape[0], 1) :
-        return None 
+    def mse_(self, y_score, y_model) : 
+        # if not isinstance(y_score, np.ndarray) or y_score.size == 0 : 
+        #     return None 
+        # if not isinstance(y_model, np.ndarray) or y_model.size == 0 : 
+        #     return None
+        # if y_score.shape != y_model.shape :
+        #     return None
 
-    minus = min(x) 
-    maxus = max(x) 
+        return np.square(np.subtract(y_model, y_score)).mean()
 
-    ret = np.zeros(x.shape)
-    for i, el in np.ndenumerate(x) : 
-        ret[i] = (el -minus) / (maxus - minus) 
-    return  ret
+def plot(x, y, theta, loss) :
 
+    plt.scatter(x, y, color = "blue", label = "Data") 
+    # set legend 
+   # plt.legend(["Data", "Linear regression"]) 
+    # set x axis label 
+    plt.xlabel("km") 
+    # set y axis label 
+    plt.ylabel("price") 
+    # set title 
+    plt.title("Linear regression") 
+    # Add loss to the title 
+    plt.title("Linear regression (loss = " + str(loss.round(2)) + "%)")
 
-def plot(x, y, theta) :
-
-    plt.scatter(x, y, color = "blue") 
-    plt.plot(x, theta[0] + theta[1] * x, color = "red") 
-    plt.savefig("plot.png")
+    plt.plot(x, theta[0] + theta[1] * x, color = "red", label = "Linear regression") 
+    plt.legend()
+    plt.savefig("bonus.png")
     plt.show() 
 
 if __name__ == "__main__" : 
 
-    # data = pd.read_csv("data.csv") 
-    data = np.loadtxt("data.csv", dtype = np.longdouble, delimiter = ',', skiprows = 1)
+    # Check is the file exists, if not exit the program 
+    if not os.path.isfile("data.csv") : 
+        print("File data.csv does not exist") 
+        exit()
+    # Check if file is as valid csv file, if not exit the program 
+    try :
+        data = pd.read_csv("data.csv") 
+    except :
+        print("File data.csv is not a valid csv file") 
+        exit()
+    X = np.array(data.loc[:,"km"]).reshape(-1,1)
+    Y = np.array(data.loc[:,"price"]).reshape(-1,1)  
 
-    # X = np.array(data.loc[:,"km"]).reshape(-1,1)
-    # Y = np.array(data.loc[:,"price"]).reshape(-1,1)  
+  
+    Xnorm = (X - np.mean(X)) / np.std(X)
 
-    # X0 = np.array(data.loc[:,"km"]) 
-    # Y0 = np.array(data.loc[:,"price"]) 
-    # X0 = X
-    # Y0 = Y
-
-   # X = minmax(X) 
-    # Y = minmax(Y) 
-    X0 = data[:, 0]
-    Y0 = data[:, 1]
-    Y = Y0
-    X = (data[:, 0] - np.mean(data[:, 0])) / np.std(data[:, 0])
-    # Y = (data[:, 1] - np.mean(data[:, 1])) / np.std(data[:, 1])
-
-    myLr = MyLinearRegression(np.array([[0.], [0.]]), 0.3, 1500) 
-    # myLr.predict_(X)
-    myLr.fit_(X, Y) 
-
-    myLr.thetas[0] -= myLr.thetas[1] * np.mean(X0) / np.std(X0)
-    myLr.thetas[1] /= np.std(X0)
-
-    print(myLr.thetas[0].round(2))
-    print(myLr.thetas[1].round(2))
-    # myLr.thetas = (myLr.thetas * (max(X) - min(X))) + min(X)  
-    # myLr.thetas[1] = (myLr.thetas[1] * (max(Y0) - min(Y0))) + min(Y0) 
+    myLr = MyLinearRegression(np.array([[0.], [0.]]), 0.3, 15000) 
+    myLr.fit_(Xnorm, Y) 
 
 
-    #y_hat = myLr.predict_(X) 
-    #print(y_hat)
-    # print(myLr.thetas)
-    plot(X0, Y0, myLr.thetas) 
+    myLr.thetas[0] -= myLr.thetas[1] * np.mean(X) / np.std(X)
+    myLr.thetas[1] /= np.std(X)
+
+    # Calculate the loss of the model and print it in percentage 
+    loss = myLr.mse_(Y, myLr.predict_(X)) / 100000
+    # print the loss with two decimals 
+
+    print("Loss of the model : {}%".format(loss.round(2))) 
+
+    # Calcuate the loss of the model 
+
+
+   #print(myLr.thetas[0].round(2))
+   # print(myLr.thetas[1].round(2))
+  
+   
+   # print(myLr.thetas)
+    plot(X, Y, myLr.thetas, loss) 
+    np.savetxt("thetas.csv", myLr.thetas, delimiter = ",") 
+
+
 
 
 
